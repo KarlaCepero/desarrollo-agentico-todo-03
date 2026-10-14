@@ -1,7 +1,7 @@
 <header class="page-header">
   <h1>Tareas</h1>
   <p class="list-count">
-    <%= len(tasks) %> <%= if (len(tasks) == 1) { %>tarea en tu lista<% } else { %>tareas en tu lista<% } %>
+    <%= len(tasks) %> <%= if (len(tasks) == 1) { %>tarea en tu lista<% } else { %>tareas en tu lista<% } %><%= if (len(tasks) > 0) { %><% let pending = tasks.PendingCount() %> · <%= pending %> <%= if (pending == 1) { %>pendiente<% } else { %>pendientes<% } %><% } %>
   </p>
 </header>
 

@@ -69,3 +69,9 @@ func (ms *ModelSuite) Test_Task_Toggle_Persists() {
 	ms.NoError(ms.DB.Find(reloaded, task.ID))
 	ms.True(reloaded.Completed)
 }
+
+func (ms *ModelSuite) Test_Tasks_PendingCount() {
+	ms.Equal(0, Tasks{}.PendingCount())
+	ms.Equal(2, Tasks{{Completed: false}, {Completed: true}, {Completed: false}}.PendingCount())
+	ms.Equal(0, Tasks{{Completed: true}, {Completed: true}}.PendingCount())
+}
