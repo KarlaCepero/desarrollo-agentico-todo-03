@@ -15,6 +15,49 @@ func (as *ActionSuite) Test_TasksIndex_EmptyState() {
 	res := as.HTML("/").Get()
 	as.Equal(200, res.Code)
 	as.Contains(res.Body.String(), "No hay tareas todavía")
+	as.Contains(res.Body.String(), "0 tareas en tu lista")
+	as.NotContains(res.Body.String(), "pendiente")
+}
+
+func (as *ActionSuite) Test_TasksIndex_PendingCount() {
+	as.LoadFixture("tres tareas")
+
+	res := as.HTML("/").Get()
+	as.Equal(200, res.Code)
+	as.Contains(res.Body.String(), "3 tareas en tu lista · 2 pendientes")
+}
+
+func (as *ActionSuite) Test_TasksIndex_PendingCount_Singular() {
+	task := &models.Task{Title: "Única tarea"}
+	verrs, err := as.DB.ValidateAndCreate(task)
+	as.NoError(err)
+	as.False(verrs.HasAny())
+
+	res := as.HTML("/").Get()
+	as.Equal(200, res.Code)
+	as.Contains(res.Body.String(), "1 tarea en tu lista · 1 pendiente")
+	as.NotContains(res.Body.String(), "1 pendientes")
+}
+
+func (as *ActionSuite) Test_TasksIndex_PendingCount_AllCompleted() {
+	for _, title := range []string{"Primera hecha", "Segunda hecha"} {
+		task := &models.Task{Title: title, Completed: true}
+		verrs, err := as.DB.ValidateAndCreate(task)
+		as.NoError(err)
+		as.False(verrs.HasAny())
+	}
+
+	res := as.HTML("/").Get()
+	as.Equal(200, res.Code)
+	as.Contains(res.Body.String(), "2 tareas en tu lista · 0 pendientes")
+}
+
+func (as *ActionSuite) Test_TasksCreate_Invalid_ShowsPendingCount() {
+	as.LoadFixture("tres tareas")
+
+	res := as.HTML("/tasks").Post(&models.Task{Title: ""})
+	as.Equal(422, res.Code)
+	as.Contains(res.Body.String(), "3 tareas en tu lista · 2 pendientes")
 }
 
 func (as *ActionSuite) Test_TasksIndex_ListsTasks() {
