@@ -100,11 +100,13 @@ Ejecuta las validaciones del repositorio. Los tests de aplicación necesitan Pos
 
 ## 7. Commit
 
-1. `git status --short`. Selecciona solo los archivos que pertenecen al cambio y el plan. Excluye los archivos sin seguimiento que ya existían antes de empezar, `.env*`, credenciales, binarios y artefactos generados.
-2. Revisa el diff en busca de secretos (tokens, contraseñas, claves). Si aparece alguno, detente sin hacer commit.
-3. `git add -- <lista explícita>` (nunca `git add .` ni `-A`), y después `git diff --cached --check`.
-4. Mensaje Conventional Commits: tipo `feat` (feature), `fix` (bug) o `chore` (chore); scope apropiado; descripción imperativa en minúsculas, sin punto final, primera línea de 50 caracteres o menos. En el cuerpo, un resumen breve y `Refs #<número>` si hay issue. Añade las líneas de atribución que exija la sesión.
-5. `git commit`. Nunca `--amend`, `--no-verify` ni reescritura de historia.
+Invoca con la herramienta Skill el comando `git:commit` del repositorio, pasándole como argumento la lista explícita de archivos del cambio y el plan. Ese comando revisa el diff, excluye secretos y artefactos, hace `git add` con lista explícita y crea el commit; no dupliques su lógica aquí. Al invocarlo, exige además:
+
+- Selección: solo los archivos que pertenecen al cambio y el plan. Fuera quedan los archivos sin seguimiento que ya existían antes de empezar, `.env*`, credenciales, binarios y artefactos generados.
+- Mensaje Conventional Commits: tipo `feat` (feature), `fix` (bug) o `chore` (chore); scope apropiado; descripción imperativa en minúsculas, sin punto final, primera línea de 50 caracteres o menos. En el cuerpo, un resumen breve y `Refs #<número>` si hay issue. Las líneas de atribución que exija la sesión.
+- Nunca `--amend`, `--no-verify` ni reescritura de historia.
+
+Si `git:commit` detecta un posible secreto o no crea el commit, detente.
 
 Si se pasó `--no-pr`, salta al paso 9.
 
