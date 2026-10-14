@@ -1,10 +1,12 @@
 package actions
 
 import (
+	"io/fs"
 	"net/url"
 	"strings"
 
 	"todo/models"
+	"todo/public"
 
 	"github.com/gofrs/uuid"
 )
@@ -236,4 +238,46 @@ func (as *ActionSuite) Test_TasksUpdate_NotFound() {
 func (as *ActionSuite) Test_TasksUpdate_InvalidID() {
 	res := as.HTML("/tasks/no-es-un-uuid").Put(url.Values{"title": {"Título nuevo"}})
 	as.Equal(404, res.Code)
+}
+
+func (as *ActionSuite) Test_TasksToggle_FormPostWithMethodOverride() {
+	task := &models.Task{Title: "Pendiente por formulario"}
+	verrs, err := as.DB.ValidateAndCreate(task)
+	as.NoError(err)
+	as.False(verrs.HasAny())
+
+	res := as.HTML("/tasks/%s/toggle", task.ID).Post(url.Values{"_method": {"PUT"}})
+	as.Equal(303, res.Code)
+
+	as.NoError(as.DB.Reload(task))
+	as.True(task.Completed)
+}
+
+func (as *ActionSuite) Test_TasksToggle_GetIsNotRouted() {
+	task := &models.Task{Title: "No se completa con GET"}
+	verrs, err := as.DB.ValidateAndCreate(task)
+	as.NoError(err)
+	as.False(verrs.HasAny())
+
+	res := as.HTML("/tasks/%s/toggle", task.ID).Get()
+	as.Equal(404, res.Code)
+
+	as.NoError(as.DB.Reload(task))
+	as.False(task.Completed)
+}
+
+func (as *ActionSuite) Test_AppJS_ToggleUsesFormPost() {
+	js, err := fs.ReadFile(public.FS(), "assets/app.js")
+	as.NoError(err)
+
+	source := string(js)
+	as.Contains(source, `method: "POST"`)
+	as.Contains(source, "new FormData(form)")
+	as.NotContains(source, "fetch(form.action);")
+}
+
+func (as *ActionSuite) Test_Layout_LoadsCurrentAppJS() {
+	res := as.HTML("/").Get()
+	as.Equal(200, res.Code)
+	as.Contains(res.Body.String(), "/assets/app.js?v=3")
 }
